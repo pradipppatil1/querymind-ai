@@ -100,3 +100,24 @@ uv run python main.py
 
 ## 🤝 Dataset Credit
 This project uses the `trl-lab/SQaLe-text-to-SQL-dataset` as a retrieval source to improve query accuracy through few-shot learning.
+
+---
+
+## ⚠️ Current Limitations & Roadmap
+
+### Current Limitations
+*   **Single Schema Support**: The agent is currently configured to work with a single MySQL database (`wealth_management`).
+*   **CLI Interface**: The application runs exclusively in the console/terminal, which may not be user-friendly for non-technical stakeholders.
+*   **Basic Data Visualization**: Results are currently displayed as raw text or simple pandas DataFrames in the console.
+
+### Roadmap & Future Improvements
+*   **Multi-Schema Integration**: 
+    *   Implement support for cross-database queries using fully qualified names (`database.table`).
+    *   Enhance the RAG engine to index and retrieve metadata from multiple schemas.
+*   **Professional UI/UX**:
+    *   Develop a web-based chatbot interface using **Streamlit**, **Chainlit**, or **React**.
+    *   Add interactive charts and graphs for trend analysis.
+*   **Enterprise Features**:
+    *   Role-based access control (RBAC) at the database layer.
+    *   Support for managed database services (RDS, Cloud SQL).
+
