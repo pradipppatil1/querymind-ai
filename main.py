@@ -3,7 +3,7 @@ import pandas as pd
 
 def main():
     agent = SQLAgent()
-    print("Welcome to Wealth Banking Analytics (Pinterest-style)")
+    print("Welcome to Wealth Banking Analytics")
     print("Type 'exit' to quit.")
     
     while True:

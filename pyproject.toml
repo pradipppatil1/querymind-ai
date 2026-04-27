@@ -1,5 +1,5 @@
 [project]
-name = "text-2-sql-pinterest"
+name = "text-2-sql"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
