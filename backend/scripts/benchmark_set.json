@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Show all patients in California.",
+    "ground_truth_sql": "SELECT * FROM patients WHERE state = 'CA';"
+  },
+  {
+    "question": "List all departments.",
+    "ground_truth_sql": "SELECT * FROM departments;"
+  },
+  {
+    "question": "How many patients are there in total?",
+    "ground_truth_sql": "SELECT COUNT(*) FROM patients;"
+  },
+  {
+    "question": "What is the total cost of all procedures?",
+    "ground_truth_sql": "SELECT SUM(cost) FROM procedures;"
+  },
+  {
+    "question": "What is the average total amount for billing records?",
+    "ground_truth_sql": "SELECT AVG(total_amount) FROM billing_records;"
+  },
+  {
+    "question": "List the names of all providers and their specialties.",
+    "ground_truth_sql": "SELECT first_name, last_name, specialty FROM providers;"
+  },
+  {
+    "question": "Show the first and last names of providers in the Cardiology department.",
+    "ground_truth_sql": "SELECT p.first_name, p.last_name FROM providers p JOIN departments d ON p.department_id = d.department_id WHERE d.name = 'Cardiology';"
+  },
+  {
+    "question": "Find the total amount billed for patient with ID 1001.",
+    "ground_truth_sql": "SELECT SUM(b.total_amount) FROM billing_records b JOIN admissions a ON b.admission_id = a.admission_id WHERE a.patient_id = 1001;"
+  },
+  {
+    "question": "Which department has the most providers?",
+    "ground_truth_sql": "SELECT d.name, COUNT(p.provider_id) as provider_count FROM departments d JOIN providers p ON d.department_id = p.department_id GROUP BY d.name ORDER BY provider_count DESC LIMIT 1;"
+  },
+  {
+    "question": "List the procedures performed on 2023-05-10.",
+    "ground_truth_sql": "SELECT procedure_name FROM procedures WHERE procedure_date = '2023-05-10';"
+  },
+  {
+    "question": "How many admissions were there in the year 2023?",
+    "ground_truth_sql": "SELECT COUNT(*) FROM admissions WHERE admission_date >= '2023-01-01' AND admission_date <= '2023-12-31';"
+  },
+  {
+    "question": "Show all claims with a status of 'Denied'.",
+    "ground_truth_sql": "SELECT * FROM claims WHERE claim_status = 'Denied';"
+  },
+  {
+    "question": "What is the total covered amount by Blue Cross?",
+    "ground_truth_sql": "SELECT SUM(covered_amount) FROM claims WHERE insurance_provider = 'Blue Cross';"
+  },
+  {
+    "question": "Which provider performed the highest number of procedures?",
+    "ground_truth_sql": "SELECT pr.first_name, pr.last_name, COUNT(p.procedure_id) as count FROM providers pr JOIN procedures p ON pr.provider_id = p.provider_id GROUP BY pr.provider_id ORDER BY count DESC LIMIT 1;"
+  },
+  {
+    "question": "List all patients who have been admitted for 'Pneumonia'.",
+    "ground_truth_sql": "SELECT p.first_name, p.last_name FROM patients p JOIN admissions a ON p.patient_id = a.patient_id WHERE a.primary_diagnosis = 'Pneumonia';"
+  },
+  {
+    "question": "What is the average cost of procedures by department?",
+    "ground_truth_sql": "SELECT d.name, AVG(p.cost) FROM procedures p JOIN providers pr ON p.provider_id = pr.provider_id JOIN departments d ON pr.department_id = d.department_id GROUP BY d.name;"
+  },
+  {
+    "question": "Show the top 5 most expensive procedures.",
+    "ground_truth_sql": "SELECT procedure_name, cost FROM procedures ORDER BY cost DESC LIMIT 5;"
+  },
+  {
+    "question": "What is the unpaid total amount for billing records?",
+    "ground_truth_sql": "SELECT SUM(total_amount) FROM billing_records WHERE status = 'Unpaid';"
+  },
+  {
+    "question": "List patients who live in 'New York' city.",
+    "ground_truth_sql": "SELECT first_name, last_name FROM patients WHERE city = 'New York';"
+  },
+  {
+    "question": "How many claims were filed for admissions where the diagnosis was 'COVID-19'?",
+    "ground_truth_sql": "SELECT COUNT(c.claim_id) FROM claims c JOIN billing_records b ON c.bill_id = b.bill_id JOIN admissions a ON b.admission_id = a.admission_id WHERE a.primary_diagnosis = 'COVID-19';"
+  },
+  {
+    "question": "Show the contact phone number for the 'Oncology' department.",
+    "ground_truth_sql": "SELECT phone FROM departments WHERE name = 'Oncology';"
+  },
+  {
+    "question": "Find the total covered amount for claims submitted in October 2023.",
+    "ground_truth_sql": "SELECT SUM(covered_amount) FROM claims WHERE claim_date >= '2023-10-01' AND claim_date <= '2023-10-31';"
+  },
+  {
+    "question": "List the insurance providers that have denied claims.",
+    "ground_truth_sql": "SELECT DISTINCT insurance_provider FROM claims WHERE claim_status = 'Denied';"
+  },
+  {
+    "question": "Which patient had the longest admission duration?",
+    "ground_truth_sql": "SELECT p.first_name, p.last_name, DATEDIFF(a.discharge_date, a.admission_date) as duration FROM patients p JOIN admissions a ON p.patient_id = a.patient_id ORDER BY duration DESC LIMIT 1;"
+  },
+  {
+    "question": "Show the percentage of covered amount versus total amount for bill ID 500.",
+    "ground_truth_sql": "SELECT (c.covered_amount / b.total_amount) * 100 FROM claims c JOIN billing_records b ON c.bill_id = b.bill_id WHERE b.bill_id = 500;"
+  }
+]

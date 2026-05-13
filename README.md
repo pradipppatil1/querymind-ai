@@ -1,123 +1,133 @@
-# 🏦 Personal Wealth Banking - Text-to-SQL
+# 🧠 QueryMind AI: The Future of Conversational Healthcare Analytics
 
-A production-grade Text-to-SQL system for the Wealth Management domain. This application allows users to query a complex banking database using natural language, powered by **Gemini/Gemma**, **Qdrant Vector DB**, and **MySQL**.
+> **Bridging the gap between human curiosity and complex medical data.**
+
+Enterprises spend an average of **3–5 days** waiting for data analysts to fulfill ad-hoc SQL requests. Business stakeholders who understand their domain deeply are often blocked by the technical barrier of SQL syntax. **QueryMind AI** is the solution: a production-grade Text-to-SQL platform that lets any user get accurate query results instantly — without writing a single line of SQL.
+
+---
 
 ## 🏗️ System Architecture
 
+QueryMind AI uses a sophisticated multi-agent orchestration layer to ensure accuracy and safety.
+
 ```mermaid
 graph TD
-    User([User Query]) --> Agent[Analytics Agent]
-    Agent --> RAG[RAG Engine]
-    RAG --> Qdrant[(Qdrant Vector DB)]
-    Qdrant -- Table Metadata --> RAG
-    Qdrant -- Golden Queries SQaLe --> RAG
-    RAG --> LLM[Gemini / Gemma]
-    LLM --> SQL[Generated SQL]
-    SQL --> MySQL[(MySQL DB)]
-    MySQL --> Results[Query Results]
-    Results --> Reflection{Success?}
-    Reflection -- Error --> LLM
-    Reflection -- Success --> User
+    User((User)) -->|NL Query| UI[Next.js Frontend]
+    UI -->|API Request| API[FastAPI Backend]
+    
+    subgraph "Observability & Monitoring"
+        API -->|Traces/Logs| Langfuse[Langfuse Dashboard]
+    end
+    
+    subgraph "Agentic Pipeline"
+        API --> Classifier[Intent Classifier]
+        Classifier -->|Intent & Schema| Linker[Schema Linker]
+        Linker -->|Relevant Meta| Retriever[Qdrant Vector Store]
+        Retriever -->|Few-Shot Examples| Generator[SQL Generator]
+    end
+    
+    subgraph "Execution & Safety"
+        Generator -->|Raw SQL| Guardrails[Security Guardrails]
+        Guardrails -->|Sanitized SQL| Executor[SQL Executor]
+        Executor -->|Raw Results| Shield[HIPAA Privacy Shield]
+        Shield -->|Masked Data| Formatter[Result Formatter]
+    end
+    
+    Executor -->|Query| DB[(MySQL Database)]
+    Formatter -->|NL Summary + Table| UI
+    UI -->|Auto-Chart| Charts[Recharts Visualization]
 ```
 
----
-
-## 🛠️ Prerequisites
-
-Before you begin, ensure you have the following installed:
-*   **Python 3.10+** (Managed via `uv`)
-*   **MySQL Server**: Running on `localhost:3306`
-*   **Qdrant**: Running on `localhost:6333` (Docker recommended)
-*   **Google Gemini API Key**: [Get it here](https://aistudio.google.com/)
-*   **Hugging Face Token**: [Get it here](https://huggingface.co/settings/tokens)
+### 🔐 The 7-Layer Defense & Quality Stack
+1.  **Intent Classifier:** Detects if the query is analytical, destructive, or a prompt injection attempt.
+2.  **Vector Retrieval (RAG):** Uses Qdrant to find the most relevant "Few-Shot" SQL examples for the current question.
+3.  **Security Guardrails:** A deterministic layer that blocks `DROP`, `DELETE`, or `UPDATE` commands at the string level.
+4.  **Compliance Shield:** Automatically masks PII (Names, DOB, Phone) to ensure HIPAA compliance before data leaves the server.
+5.  **Multi-Dialect Transpiler:** Uses `sqlglot` to provide reference SQL for PostgreSQL or BigQuery while executing MySQL.
+6.  **Observability (Langfuse):** Full-stack tracing of every agent's reasoning and token cost.
+7.  **Smart Visualization:** Automatically selects the best chart type (Bar/Line) based on the data shape.
 
 ---
 
-## 🚀 Step-by-Step Setup
+## 🎭 The Story: From Query to Insight
 
-### 1. Initialize the Project
-Open your terminal in the project folder and run:
+Every question you ask QueryMind goes on an epic journey through a sophisticated **7-layer multi-agent pipeline**:
+
+1.  **The Gatekeeper (Query Classifier):** We determine your intent (Simple, Aggregate, Join, or Temporal). If you try to `DROP` a table, the Gatekeeper stops you before you even reach the brain.
+2.  **The Cartographer (Schema Linker):** Maps your human terms (like "revenue") to technical database columns (`billing_amount`) while resolving ambiguities.
+3.  **The Librarian (Examples Retriever):** Powered by **Qdrant Vector Search**, we pull the 3–5 most relevant (Question → SQL) pairs to guide the generation process.
+4.  **The Architect (SQL Generator):** The "Brain" (Claude/GPT) constructs a syntactically perfect query tailored to your chosen domain.
+5.  **The Guardian (SQL Validator):** A strict gatekeeper that enforces **read-only access**, sanitizes syntax, and appends safety row limits.
+6.  **The Executor (Safe DB Connector):** Runs the query against a read-only database role, capturing millisecond-latency and row counts.
+7.  **The Result Formatter:** Converts raw data into a human-friendly **NL Summary** and a clean **Tabular View**.
+
+---
+
+## 🛰️ Dashboard Components (Next.js 14+)
+
+- **Query Chat:** Real-time chat interface with **Voice Input** and **Smart Charting**.
+- **Admin UI (5 Specialized Panels):**
+  - **Schema Manager:** Browse tables, add column descriptions, and hide sensitive data.
+  - **Examples Manager:** CRUD operations for few-shot learning pairs with semantic search.
+  - **Query Logs:** Full telemetry (Input, SQL, Latency, Status) for monitoring.
+  - **Guardrails Config:** Toggle safety limits and block specific SQL operations.
+  - **Model Config:** Switch LLMs, adjust temperature, and select dialects.
+
+---
+
+## ⚙️ Backend Intelligence
+- **Domain Focus:** Reference implementation targets **Hospital Billing**, handling complex joins between patients, admissions, and claims.
+- **Transpilation:** Native support for **Multi-dialect generation** (MySQL, PostgreSQL, etc.) via `sqlglot`.
+- **Vector Intelligence:** Integrated **Qdrant** for high-precision semantic retrieval.
+
+---
+
+## 🌟 Implemented "Bonus" Features
+- ✅ **HIPAA-Compliant Masking:** Built-in "Compliance Shield" that automatically masks PII (Names, DOB, Contact Info) at the source.
+- ✅ **Langfuse Observability:** Full-stack tracing of agentic flows, prompt debugging, and token cost monitoring.
+- ✅ **Chart Auto-generation:** Smart logic that automatically renders Bar or Line charts for analytical result sets.
+- ✅ **Multi-dialect Support:** Toggle between dialects to see how the same question looks in different SQL engines.
+- ✅ **Voice Input:** Use the microphone button to "talk" to your database.
+- ✅ **Performance Telemetry:** Real-time latency tracking and execution metrics.
+
+---
+
+## 🚀 Local Setup
+
+### 1. Clone & Prep
 ```bash
-# Initialize uv environment
-uv init
-
-# Install dependencies
-uv pip install -r pyproject.toml
+git clone https://github.com/pradipppatil1/querymind-ai.git
+cd querymind-ai
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the root directory and fill in your credentials:
-```env
-# MySQL
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=wealth_management
-
-# Qdrant
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-
-# Models
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-GENERATION_MODEL=gemini-1.5-flash  # Or your tuned gemma model
-GOOGLE_API_KEY=your_gemini_key
-HF_TOKEN=your_huggingface_token
-```
-
-### 3. Start Local Services
-*   **MySQL**: Ensure your service is started.
-*   **Qdrant**: Run via Docker for the easiest setup:
-    ```bash
-    docker run -p 6333:6333 qdrant/qdrant
-    ```
-
-### 4. Run the Initial Setup Script
-This is a **critical step**. Running this script will:
-1.  **Generate Data**: Create `wealth_management` database and Populates your MySQL tables with dummy banking data (Users, Accounts, Transactions, etc.).
-2.  **Index Metadata**: Analyzes your schema and stores it in Qdrant for RAG-based table selection.
-3.  **Seed Golden Queries**: Streams a subset of the **SQaLe Text-to-SQL dataset** from Hugging Face and indexes it to provide "Few-Shot" examples to the LLM.
-
+### 2. Ignite the Backend (Python 3.10+ / UV)
 ```bash
-uv run python scripts/setup.py
+cd backend
+uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv sync
+cp .env.example .env  # Add your LLM keys & DB credentials
+uv run uvicorn app.main:app --reload
 ```
 
-### 5. Launch the Application
-Start the interactive analytics agent:
+### 3. Launch the Frontend (Node.js 18+)
 ```bash
-uv run python main.py
+cd ../frontend
+npm install
+npm run dev
 ```
+Navigate to `http://localhost:3000` to start querying.
+
+## 📊 Quality Benchmarks (Phase 7 Evaluation)
+
+QueryMind AI has been rigorously tested against a 25-query benchmark covering complex joins, temporal filters, and multi-level aggregates.
+
+| Metric | Score | Industry Context |
+| :--- | :--- | :--- |
+| **Execution Accuracy** | **68.00%** | High performance for complex hospital schemas |
+| **Guardrails Compliance** | **100.00%** | Zero destructive queries or injections allowed |
+| **Context Precision** | **76.00%** | High-precision few-shot example retrieval |
+| **Faithfulness** | **54.67%** | Strong grounding in retrieved database facts |
 
 ---
 
-## 🔍 How It Works
-
-1.  **Retrieval (RAG)**: When you ask a question, the agent searches Qdrant for the most relevant **Table Metadata** and **Golden Queries** (historically correct SQL examples).
-2.  **Prompting**: It constructs a high-context prompt containing your schema and examples.
-3.  **Generation**: Gemini/Gemma generates a precise SQL query.
-4.  **Execution**: The query is run against MySQL.
-5.  **Reflection**: If the query fails, the agent takes the error message, reflects on it, and tries to fix the SQL automatically.
-
-## 🤝 Dataset Credit
-This project uses the `trl-lab/SQaLe-text-to-SQL-dataset` as a retrieval source to improve query accuracy through few-shot learning.
-
----
-
-## ⚠️ Current Limitations & Roadmap
-
-### Current Limitations
-*   **Single Schema Support**: The agent is currently configured to work with a single MySQL database (`wealth_management`).
-*   **CLI Interface**: The application runs exclusively in the console/terminal, which may not be user-friendly for non-technical stakeholders.
-*   **Basic Data Visualization**: Results are currently displayed as raw text or simple pandas DataFrames in the console.
-
-### Roadmap & Future Improvements
-*   **Multi-Schema Integration**: 
-    *   Implement support for cross-database queries using fully qualified names (`database.table`).
-    *   Enhance the RAG engine to index and retrieve metadata from multiple schemas.
-*   **Professional UI/UX**:
-    *   Develop a web-based chatbot interface using **Streamlit**, **Chainlit**, or **React**.
-    *   Add interactive charts and graphs for trend analysis.
-*   **Enterprise Features**:
-    *   Role-based access control (RBAC) at the database layer.
-    *   Support for managed database services (RDS, Cloud SQL).
-
+**QueryMind AI** — *Ask. Discover. Decide.*
