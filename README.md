@@ -4,6 +4,8 @@
 
 Enterprises spend an average of **3–5 days** waiting for data analysts to fulfill ad-hoc SQL requests. Business stakeholders who understand their domain deeply are often blocked by the technical barrier of SQL syntax. **QueryMind AI** is the solution: a production-grade Text-to-SQL platform that lets any user get accurate query results instantly — without writing a single line of SQL.
 
+**📺 Watch the Demo:** [Loom Video](https://www.loom.com/share/4285287117554f2b847e267e592bf87a)
+
 ---
 
 ## 🏗️ System Architecture
@@ -117,7 +119,7 @@ npm run dev
 ```
 Navigate to `http://localhost:3000` to start querying.
 
-## 📊 Quality Benchmarks (Phase 7 Evaluation)
+## 📊 Quality Benchmarks (Evaluation)
 
 QueryMind AI has been rigorously tested against a 25-query benchmark covering complex joins, temporal filters, and multi-level aggregates.
 
@@ -127,6 +129,20 @@ QueryMind AI has been rigorously tested against a 25-query benchmark covering co
 | **Guardrails Compliance** | **100.00%** | Zero destructive queries or injections allowed |
 | **Context Precision** | **76.00%** | High-precision few-shot example retrieval |
 | **Faithfulness** | **54.67%** | Strong grounding in retrieved database facts |
+
+## 🧠 Key Design Decisions
+
+- **Deterministic Security Layer:** We chose string-based guardrails over LLM-based safety to ensure 100% protection against prompt injection and destructive SQL, even if the LLM is "hallucinating" safety.
+- **Metadata-Driven Privacy Shield:** By masking PII based on database column names (Deterministic) rather than NLP scanning (Probabilistic), we achieved zero-cost HIPAA compliance with sub-millisecond latency.
+- **Semantic RAG for Few-Shot Learning:** Instead of static examples, we use Qdrant to dynamically inject the most relevant (Question → SQL) pairs, allowing the system to scale to thousands of tables without losing accuracy.
+- **Modular Agent Orchestration:** Every phase (Classifier, Linker, Generator) is isolated, making it easy to swap LLM providers (e.g., GPT-4 to Claude-3) without rewriting the core engine.
+
+## 🚧 Known Limitations
+
+- **Complex Nested Subqueries:** While the engine handles multi-table joins, extremely deep nested subqueries (4+ levels) may require manual few-shot tuning.
+- **Single-Engine Execution:** The system generates multi-dialect SQL for reference, but currently only supports active execution against **MySQL**.
+- **UI Row Capping:** For performance stability, the current UI caps result sets to the first **100 rows** (adjustable in Admin Guardrails).
+- **Cold Start Latency:** Initial queries may take 2-4 seconds as the Vector store and LLM context warm up.
 
 ---
 

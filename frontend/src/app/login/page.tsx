@@ -41,7 +41,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-3xl font-bold tracking-tight">Welcome Back</CardTitle>
           <CardDescription className="text-base">
-            Enter your credentials to access QueryMind AI
+            Enter your credentials to access <span className="font-bold text-foreground">QueryMind AI</span>
           </CardDescription>
         </CardHeader>
         

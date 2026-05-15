@@ -49,23 +49,68 @@ export default function Home() {
   const getChartConfig = (results: any[]) => {
     if (!results || results.length === 0) return null;
     const keys = Object.keys(results[0]);
+    
+    // STRICT CONSTRAINT: Result set must have <= 2 columns
     if (keys.length === 0 || keys.length > 2) return null;
 
-    const numericKey = keys.find(k => typeof results[0][k] === 'number');
-    if (!numericKey) return null;
+    const isNumeric = (val: any) => {
+      if (typeof val === 'number') return true;
+      if (typeof val === 'string' && val.trim() !== '') {
+        return !isNaN(Number(val));
+      }
+      return false;
+    };
 
-    const categoryKey = keys.find(k => k !== numericKey) || numericKey;
+    // Identify which key is the "measure" (value) and which is the "dimension" (category)
+    const numKeys = keys.filter(k => isNumeric(results[0][k]));
+    const categoricalKeys = keys.filter(k => !isNumeric(results[0][k]));
+
+    let numericKey = "";
+    let categoryKey = "";
+
+    if (numKeys.length === 0) return null;
+
+    if (numKeys.length === 1) {
+      numericKey = numKeys[0];
+      categoryKey = categoricalKeys.length > 0 ? categoricalKeys[0] : (keys.find(k => k !== numericKey) || keys[0]);
+    } else {
+      // If both are numbers (e.g., year and total_revenue), we need smarter heuristics
+      const valueKeywords = ['amount', 'total', 'billed', 'price', 'count', 'sum', 'avg', 'revenue', 'cost', 'rate', 'value'];
+      const categoryKeywords = ['id', 'month', 'year', 'day', 'quarter', 'code', 'zip', 'age'];
+      
+      const vKey = numKeys.find(k => valueKeywords.some(kw => k.toLowerCase().includes(kw)));
+      const cKey = numKeys.find(k => categoryKeywords.some(kw => k.toLowerCase().includes(kw)));
+      
+      if (vKey && cKey && vKey !== cKey) {
+        numericKey = vKey;
+        categoryKey = cKey;
+      } else if (vKey) {
+        numericKey = vKey;
+        categoryKey = numKeys.find(k => k !== vKey) || keys[0];
+      } else {
+        // Fallback: pick the last numeric key as value (often sum/count), first as category
+        numericKey = numKeys[numKeys.length - 1];
+        categoryKey = numKeys[0];
+      }
+    }
+
+    if (!numericKey || !categoryKey || numericKey === categoryKey) return null;
     
     // Detect if the category key looks like a date/time
     const firstVal = results[0][categoryKey];
-    const isDate = typeof firstVal === 'string' && (
-      !isNaN(Date.parse(firstVal)) || 
-      /^\d{4}-\d{2}/.test(firstVal) || 
-      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(firstVal)
+    const isDateLike = (typeof firstVal === 'string' || typeof firstVal === 'number') && (
+      !isNaN(Date.parse(String(firstVal))) || 
+      /^\d{4}$/.test(String(firstVal)) ||
+      /^\d{4}-\d{2}/.test(String(firstVal)) || 
+      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(String(firstVal))
     );
 
+    // Prefer Bar chart for small datasets (<= 10) even if it's "date-like" (like years)
+    // Use Line chart for larger datasets or more granular dates
+    const type = (isDateLike && results.length > 10) ? 'line' : 'bar';
+
     return {
-      type: isDate ? 'line' : 'bar',
+      type: type,
       xKey: categoryKey,
       yKey: numericKey
     };
@@ -473,82 +518,89 @@ export default function Home() {
                           </CardContent>
                         </Card>
 
-                        {getChartConfig(message.data.results) && (
-                          <div className="space-y-4">
-                            <Card className="bg-muted/30 border-none shadow-sm h-[250px]">
-                              <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                  {getChartConfig(message.data.results)?.type === 'line' ? 'Trend' : 'Comparison'}
-                                </CardTitle>
-                                {getChartConfig(message.data.results)?.type === 'line' ? (
-                                  <LineChart className="w-4 h-4 text-primary opacity-40" />
-                                ) : (
-                                  <BarChart className="w-4 h-4 text-primary opacity-40" />
-                                )}
-                              </CardHeader>
-                              <CardContent className="p-2 h-[180px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  {getChartConfig(message.data.results)?.type === 'line' ? (
-                                    <LineChart data={message.data.results.slice(0, 30)}>
-                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
-                                      <XAxis 
-                                        dataKey={getChartConfig(message.data.results)?.xKey} 
-                                        fontSize={10} 
-                                        axisLine={false} 
-                                        tickLine={false} 
-                                      />
-                                      <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                      <RechartsTooltip 
-                                        cursor={{ strokeOpacity: 0.2 }}
-                                        contentStyle={{ 
-                                          backgroundColor: 'var(--background)', 
-                                          borderRadius: '8px', 
-                                          border: '1px solid var(--border)', 
-                                          fontSize: '12px',
-                                          color: 'var(--foreground)'
-                                        }}
-                                        itemStyle={{ color: 'var(--primary)' }}
-                                      />
-                                      <Line 
-                                        type="monotone" 
-                                        dataKey={getChartConfig(message.data.results)?.yKey} 
-                                        stroke="hsl(var(--primary))" 
-                                        strokeWidth={2} 
-                                        dot={{ fill: 'hsl(var(--primary))', r: 3 }} 
-                                        activeDot={{ r: 5 }} 
-                                      />
-                                    </LineChart>
+                        {getChartConfig(message.data.results) && (() => {
+                          const config = getChartConfig(message.data.results)!;
+                          const chartData = message.data.results.slice(0, 30).map((r: any) => ({
+                            ...r,
+                            [config.yKey]: Number(r[config.yKey])
+                          }));
+                          
+                          return (
+                            <div className="space-y-4">
+                              <Card className="bg-muted/30 border-none shadow-sm h-[250px]">
+                                <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+                                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    {config.type === 'line' ? 'Trend' : 'Comparison'}
+                                  </CardTitle>
+                                  {config.type === 'line' ? (
+                                    <LineChart className="w-4 h-4 text-primary opacity-40" />
                                   ) : (
-                                    <BarChart data={message.data.results.slice(0, 30)}>
-                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
-                                      <XAxis 
-                                        dataKey={getChartConfig(message.data.results)?.xKey} 
-                                        fontSize={10} 
-                                        axisLine={false} 
-                                        tickLine={false} 
-                                      />
-                                      <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                      <RechartsTooltip 
-                                        cursor={{ fill: 'currentColor', fillOpacity: 0.05 }}
-                                        contentStyle={{ 
-                                          backgroundColor: 'var(--background)', 
-                                          borderRadius: '8px', 
-                                          border: '1px solid var(--border)', 
-                                          fontSize: '12px',
-                                          color: 'var(--foreground)'
-                                        }}
-                                        itemStyle={{ color: 'var(--primary)' }}
-                                      />
-                                      <Bar 
-                                        dataKey={getChartConfig(message.data.results)?.yKey} 
-                                        fill="hsl(var(--primary))" 
-                                        radius={[4, 4, 0, 0]} 
-                                      />
-                                    </BarChart>
+                                    <BarChart className="w-4 h-4 text-primary opacity-40" />
                                   )}
-                                </ResponsiveContainer>
-                              </CardContent>
-                            </Card>
+                                </CardHeader>
+                                <CardContent className="p-2 h-[180px] w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    {config.type === 'line' ? (
+                                      <LineChart data={chartData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
+                                        <XAxis 
+                                          dataKey={config.xKey} 
+                                          fontSize={10} 
+                                          axisLine={false} 
+                                          tickLine={false} 
+                                        />
+                                        <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                        <RechartsTooltip 
+                                          cursor={{ strokeOpacity: 0.2 }}
+                                          contentStyle={{ 
+                                            backgroundColor: 'var(--background)', 
+                                            borderRadius: '8px', 
+                                            border: '1px solid var(--border)', 
+                                            fontSize: '12px',
+                                            color: 'var(--foreground)'
+                                          }}
+                                          itemStyle={{ color: 'var(--primary)' }}
+                                        />
+                                        <Line 
+                                          type="monotone" 
+                                          dataKey={config.yKey} 
+                                          stroke="var(--primary)" 
+                                          strokeWidth={2} 
+                                          dot={{ fill: 'var(--primary)', r: 3 }} 
+                                          activeDot={{ r: 5 }} 
+                                        />
+                                      </LineChart>
+                                    ) : (
+                                      <BarChart data={chartData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
+                                        <XAxis 
+                                          dataKey={config.xKey} 
+                                          fontSize={10} 
+                                          axisLine={false} 
+                                          tickLine={false} 
+                                        />
+                                        <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                        <RechartsTooltip 
+                                          cursor={{ fill: 'currentColor', fillOpacity: 0.05 }}
+                                          contentStyle={{ 
+                                            backgroundColor: 'var(--background)', 
+                                            borderRadius: '8px', 
+                                            border: '1px solid var(--border)', 
+                                            fontSize: '12px',
+                                            color: 'var(--foreground)'
+                                          }}
+                                          itemStyle={{ color: 'var(--primary)' }}
+                                        />
+                                        <Bar 
+                                          dataKey={config.yKey} 
+                                          fill="var(--primary)" 
+                                          radius={[4, 4, 0, 0]} 
+                                        />
+                                      </BarChart>
+                                    )}
+                                  </ResponsiveContainer>
+                                </CardContent>
+                              </Card>
 
                             <Card className="bg-muted/30 border-none shadow-sm flex flex-col h-[135px]">
                               <CardHeader className="py-2 px-4">
@@ -565,7 +617,7 @@ export default function Home() {
                               </CardContent>
                             </Card>
                           </div>
-                        )}
+                        )})()}
                       </div>
                     </div>
                   )}
