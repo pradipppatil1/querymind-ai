@@ -254,16 +254,16 @@ def handle_query(request: QueryRequest, current_user: dict = Depends(get_current
         "summary": formatted.nl_summary
     }
     
-    # Save to Cache on Success
-    if not exec_result.error:
-        cache.set(nl_query, response)
-        
     # Transpile to requested dialects
     from app.services.dialect_transpiler import transpile_all
     active_dialects = ADMIN_STATE["config"].get("sql_dialects", ["mysql"])
     # Fetch current schema for better transpilation (alias expansion, etc)
     db_schema = executor.get_schema()
     response["sql_dialect_versions"] = transpile_all(val_result.sanitized_sql, active_dialects, schema=db_schema)
+        
+    # Save to Cache on Success (now includes dialect versions)
+    if not exec_result.error:
+        cache.set(nl_query, response)
         
     return finalize_response(response)
 

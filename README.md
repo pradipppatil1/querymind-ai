@@ -58,7 +58,7 @@ Every question you ask QueryMind goes on an epic journey through a sophisticated
 1.  **The Gatekeeper (Query Classifier):** We determine your intent (Simple, Aggregate, Join, or Temporal). If you try to `DROP` a table, the Gatekeeper stops you before you even reach the brain.
 2.  **The Cartographer (Schema Linker):** Maps your human terms (like "revenue") to technical database columns (`billing_amount`) while resolving ambiguities.
 3.  **The Librarian (Examples Retriever):** Powered by **Qdrant Vector Search**, we pull the 3–5 most relevant (Question → SQL) pairs to guide the generation process.
-4.  **The Architect (SQL Generator):** The "Brain" (Claude/GPT) constructs a syntactically perfect query tailored to your chosen domain.
+4.  **The Architect (SQL Generator):** The "Brain" constructs a syntactically perfect query tailored to your chosen domain.
 5.  **The Guardian (SQL Validator):** A strict gatekeeper that enforces **read-only access**, sanitizes syntax, and appends safety row limits.
 6.  **The Executor (Safe DB Connector):** Runs the query against a read-only database role, capturing millisecond-latency and row counts.
 7.  **The Result Formatter:** Converts raw data into a human-friendly **NL Summary** and a clean **Tabular View**.

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from .llm_factory import get_llm
+from app.core.observability import get_langfuse_callback
 
 class ResolvedSchema(BaseModel):
     resolved_tables: list[str]
@@ -25,4 +26,5 @@ class SchemaLinker:
         Database Schema Context:
         {schema_context}
         """
-        return self.llm.invoke(prompt)
+        cb = get_langfuse_callback()
+        return self.llm.invoke(prompt, config={"callbacks": [cb]} if cb else {})
